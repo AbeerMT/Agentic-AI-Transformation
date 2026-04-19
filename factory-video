@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Factory Transformation — Cartoon Edition</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --sky:#87CEEB; --grass:#5DBB63; --ground:#8B6914;
+  --wall:#F5E6C8; --roof:#D2691E; --machine:#4A90D9;
+  --belt:#8B4513; --yellow:#FFD700; --red:#FF4444;
+  --green:#44BB44; --white:#FFFEF0; --dark:#2C1810;
+  --comic:#FF6B35; --bubble:#FFFACD;
+  --shadow:rgba(0,0,0,0.15);
+}
+html,body{width:100%;height:100%;background:#1a1a2e;font-family:'Nunito',sans-serif;overflow:hidden;}
+
+#app{width:100vw;height:100vh;display:flex;flex-direction:column;position:relative;}
+
+/* CANVAS */
+#scene{flex:1;position:relative;overflow:hidden;cursor:pointer;}
+canvas{position:absolute;inset:0;width:100%;height:100%;}
+
+/* COMIC TITLE CARD */
+#title-card{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--yellow);
+  z-index:20;
+  transition:transform 0.6s cubic-bezier(0.68,-0.55,0.27,1.55);
+}
+#title-card.gone{transform:translateY(-100%);}
+#title-card h1{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(28px,5vw,64px);
+  color:var(--dark);
+  text-align:center;
+  line-height:1.1;
+  -webkit-text-stroke:2px var(--dark);
+  filter:drop-shadow(4px 4px 0 var(--comic));
+  padding:0 20px;
+}
+#title-card p{font-size:clamp(14px,2vw,22px);color:#555;margin-top:16px;font-weight:700;}
+#title-card .start-btn{
+  margin-top:32px;
+  background:var(--comic);color:white;
+  border:none;border-radius:50px;
+  font-family:'Fredoka One',cursive;font-size:clamp(18px,2.5vw,28px);
+  padding:14px 48px;cursor:pointer;
+  box-shadow:0 6px 0 #c0392b, 0 8px 20px rgba(0,0,0,0.3);
+  transition:transform 0.1s,box-shadow 0.1s;
+}
+#title-card .start-btn:hover{transform:translateY(3px);box-shadow:0 3px 0 #c0392b,0 5px 15px rgba(0,0,0,0.3);}
+#title-card .stars{font-size:40px;letter-spacing:8px;margin-bottom:16px;}
+
+/* SPEECH BUBBLE */
+#speech{
+  position:absolute;
+  background:var(--bubble);
+  border:3px solid var(--dark);
+  border-radius:20px;
+  padding:12px 18px;
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(13px,1.8vw,20px);
+  color:var(--dark);
+  max-width:280px;
+  text-align:center;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.3s;
+  z-index:10;
+  box-shadow:3px 3px 0 var(--dark);
+}
+#speech::after{
+  content:'';position:absolute;bottom:-18px;left:30px;
+  border:10px solid transparent;
+  border-top-color:var(--dark);
+}
+#speech::before{
+  content:'';position:absolute;bottom:-13px;left:32px;
+  border:8px solid transparent;
+  border-top-color:var(--bubble);
+  z-index:1;
+}
+#speech.show{opacity:1;}
+
+/* COMIC EFFECT */
+#comic-fx{
+  position:absolute;
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(32px,6vw,80px);
+  color:var(--yellow);
+  -webkit-text-stroke:3px var(--dark);
+  filter:drop-shadow(4px 4px 0 var(--comic));
+  pointer-events:none;
+  opacity:0;
+  transform:scale(0) rotate(-15deg);
+  transition:all 0.25s cubic-bezier(0.68,-0.55,0.27,1.55);
+  z-index:15;
+}
+#comic-fx.pop{opacity:1;transform:scale(1) rotate(-8deg);}
+
+/* CHAPTER TITLE */
+#chapter{
+  position:absolute;top:0;left:0;right:0;
+  background:var(--comic);
+  color:white;
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(16px,2.5vw,28px);
+  text-align:center;
+  padding:10px;
+  border-bottom:4px solid var(--dark);
+  transform:translateY(-100%);
+  transition:transform 0.4s cubic-bezier(0.68,-0.55,0.27,1.55);
+  z-index:8;
+}
+#chapter.show{transform:translateY(0);}
+
+/* NARRATION */
+#narration{
+  position:absolute;bottom:70px;left:50%;transform:translateX(-50%);
+  width:min(90%,800px);
+  background:rgba(255,254,240,0.96);
+  border:3px solid var(--dark);
+  border-radius:16px;
+  padding:14px 20px;
+  font-size:clamp(13px,1.6vw,17px);
+  font-weight:700;color:var(--dark);
+  text-align:center;
+  box-shadow:4px 4px 0 var(--dark);
+  opacity:0;transition:opacity 0.4s;
+  z-index:9;
+}
+#narration.show{opacity:1;}
+#narration .narrator-tag{
+  display:inline-block;
+  background:var(--comic);color:white;
+  font-family:'Fredoka One',cursive;
+  font-size:11px;padding:2px 10px;border-radius:20px;
+  margin-bottom:6px;letter-spacing:0.05em;
+}
+
+/* CONTROLS */
+#controls{
+  height:56px;
+  background:#2C1810;
+  border-top:4px solid var(--dark);
+  display:flex;align-items:center;padding:0 16px;gap:12px;
+  flex-shrink:0;
+}
+.cbtn{
+  background:var(--yellow);border:3px solid var(--dark);
+  color:var(--dark);font-family:'Fredoka One',cursive;font-size:14px;
+  padding:6px 18px;border-radius:30px;cursor:pointer;
+  box-shadow:3px 3px 0 var(--dark);
+  transition:transform 0.1s,box-shadow 0.1s;
+}
+.cbtn:hover{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--dark);}
+.cbtn.play{background:var(--comic);color:white;}
+
+/* PROGRESS */
+#prog-wrap{flex:1;height:14px;background:#3d2a1a;border:2px solid var(--dark);border-radius:20px;overflow:hidden;}
+#prog-fill{height:100%;background:linear-gradient(90deg,var(--yellow),var(--comic));border-radius:20px;width:0%;transition:width 0.3s;}
+
+#timer{font-family:'Fredoka One',cursive;color:var(--yellow);font-size:15px;min-width:70px;}
+
+/* SCENE DOTS */
+#dots{display:flex;gap:8px;margin-left:8px;}
+.sdot{width:14px;height:14px;border-radius:50%;background:#3d2a1a;border:2px solid #6b4c30;cursor:pointer;transition:all 0.2s;}
+.sdot.active{background:var(--yellow);box-shadow:0 0 8px var(--yellow);}
+.sdot.done{background:#6b4c30;}
+
+/* METRICS POPUP */
+#metrics-popup{
+  position:absolute;top:60px;right:20px;
+  background:white;border:3px solid var(--dark);border-radius:16px;
+  padding:16px;min-width:190px;
+  box-shadow:5px 5px 0 var(--dark);
+  display:none;z-index:10;
+  font-family:'Fredoka One',cursive;
+}
+#metrics-popup.show{display:block;animation:popIn 0.4s cubic-bezier(0.68,-0.55,0.27,1.55);}
+@keyframes popIn{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+.mrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:2px dashed #eee;}
+.mrow:last-child{margin:0;padding:0;border:none;}
+.mlabel{font-size:13px;color:#666;}
+.mval{font-size:22px;font-weight:900;}
+.mval.bad{color:var(--red);}
+.mval.ok{color:var(--comic);}
+.mval.good{color:var(--green);}
+
+/* THOUGHT BUBBLE */
+.thought{
+  position:absolute;
+  background:white;border:3px solid var(--dark);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(16px,2.5vw,28px);
+  text-align:center;padding:10px;
+  box-shadow:3px 3px 0 var(--dark);
+  animation:wobble 2s ease-in-out infinite;
+  pointer-events:none;z-index:7;
+}
+@keyframes wobble{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TITLE CARD -->
+  <div id="title-card">
+    <div class="stars">⚙️ 💧 ⚡ 🏭 😅</div>
+    <h1>Don't Just Swap the Engine.<br>Reimagine the Factory!</h1>
+    <p>A 90-second animated lesson in industrial transformation</p>
+    <button class="start-btn" onclick="startVideo()">▶ Let's Watch!</button>
+  </div>
+
+  <div id="scene">
+    <canvas id="c"></canvas>
+    <div id="chapter"></div>
+    <div id="speech"></div>
+    <div id="comic-fx"></div>
+    <div id="narration"><span class="narrator-tag">📢 Narrator</span><br><span id="nar-text"></span></div>
+    <div id="metrics-popup">
+      <div class="mrow"><span class="mlabel">📦 Output</span><span class="mval" id="mv-out">—</span></div>
+      <div class="mrow"><span class="mlabel">⚡ Energy</span><span class="mval" id="mv-eng">—</span></div>
+      <div class="mrow"><span class="mlabel">🔧 Downtime</span><span class="mval" id="mv-dwn">—</span></div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button class="cbtn" onclick="prevScene()">◀ Back</button>
+    <button class="cbtn play" id="playbtn" onclick="togglePlay()">⏸ Pause</button>
+    <button class="cbtn" onclick="nextScene()">Next ▶</button>
+    <div id="prog-wrap"><div id="prog-fill"></div></div>
+    <div id="timer">0:00</div>
+    <div id="dots"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W, H;
+
+function resize(){
+  const s = document.getElementById('scene');
+  W = cv.width  = s.clientWidth;
+  H = cv.height = s.clientHeight;
+}
+window.addEventListener('resize',()=>{resize();});
+resize();
+
+// ═══════════════════════════════════════════
+// SCENE DATA
+// ═══════════════════════════════════════════
+const SCENES=[
+{
+  id:0, dur:15,
+  title:"⚙️ Meet Bob's Factory (circa 1850)",
+  narration:"Welcome to Bob's factory! Bob is very proud. Everything runs on one giant water wheel. It spins a shaft. The shaft spins EVERYTHING. Bob has no idea this will be a problem.",
+  speech:"I love my water wheel! 💧", speechDelay:2,
+  comicFx:"SPLASH!", comicDelay:1,
+  type:'water', metrics:null
+},
+{
+  id:1, dur:15,
+  title:"🔗 The Shaft Problem",
+  narration:"See those belts connecting every machine to the same shaft? If the shaft breaks — EVERYTHING stops. If you want to move a machine — you CAN'T. The layout is a prisoner of the engine.",
+  speech:"Wait… I can't move my desk?! 😰", speechDelay:2,
+  comicFx:"UH-OH!", comicDelay:4,
+  type:'water_problem', metrics:null
+},
+{
+  id:2, dur:18,
+  title:"⚡ Bob Hears About Electricity!",
+  narration:"The year is 1900. Bob hears about electric motors. 'AMAZING!' he says. 'I'll replace my water wheel with an electric motor — same shaft, same belts, same everything!' Bob is about to make a very predictable mistake.",
+  speech:"Electric is the future! 🎉", speechDelay:1.5,
+  comicFx:"ZAP! ⚡", comicDelay:3,
+  type:'electric_swap', metrics:null
+},
+{
+  id:3, dur:16,
+  title:"😬 Bob's Disappointing Results",
+  narration:"After the upgrade: Output up 2%. TWO PERCENT. Bob spent a fortune. His workers are confused. His boss is not happy. The machines are in the exact same spot. Nothing fundamentally changed.",
+  speech:"...Just 2%? My bonus is gone. 😭", speechDelay:2,
+  comicFx:"FACEPALM!", comicDelay:1,
+  type:'bad_results',
+  metrics:{out:'+2%',eng:'-18%',dwn:'-5%', outC:'bad', engC:'ok', dwnC:'ok'}
+},
+{
+  id:4, dur:18,
+  title:"💡 The Lightbulb Moment!",
+  narration:"Then Bob's daughter — an engineer — visits. She says: 'Dad, with individual motors, EACH machine can go ANYWHERE. You don't need a shaft at all! Rethink the whole floor!' Bob's mind = blown. 🤯",
+  speech:"Dad… the shaft is the problem! 💡", speechDelay:1.5,
+  comicFx:"EUREKA!", comicDelay:3,
+  type:'eureka', metrics:null
+},
+{
+  id:5, dur:18,
+  title:"🏆 The Reimagined Factory",
+  narration:"New layout: machines arranged by workflow, not by shaft position. Each has its own motor. Parallel lines. Flexible cells. Output triples. Downtime drops 68%. Bob cries happy tears. His daughter gets promoted.",
+  speech:"This is BEAUTIFUL! 😭🎊", speechDelay:3,
+  comicFx:"WOW! 🚀", comicDelay:2,
+  type:'reimagined',
+  metrics:{out:'×3.4',eng:'-52%',dwn:'-68%', outC:'good', engC:'good', dwnC:'good'}
+},
+];
+
+const TOTAL_DUR = SCENES.reduce((a,s)=>a+s.dur,0);
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let scene=0, sTime=0, totalTime=0, playing=false, lastTs=null, animT=0;
+let particles=[], waterDrops=[], sparks=[];
+let bobMood='happy', bobBounce=0, bobBounceV=0;
+let started=false;
+
+// ═══════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════
+function addParticle(x,y,col,vx,vy,life,r,type='circle'){
+  particles.push({x,y,col,vx,vy,life,maxLife:life,r,type});
+}
+function addSpark(x,y){
+  for(let i=0;i<6;i++){
+    const a=Math.random()*Math.PI*2, s=2+Math.random()*4;
+    sparks.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-3,life:1,r:2+Math.random()*2});
+  }
+}
+function addWaterDrop(x,y){
+  waterDrops.push({x,y,vx:(Math.random()-0.5)*2,vy:-2-Math.random()*3,life:1});
+}
+function updateParticles(dt){
+  particles=particles.filter(p=>p.life>0);
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=dt;});
+  sparks=sparks.filter(p=>p.life>0);
+  sparks.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.2;p.life-=dt*1.5;});
+  waterDrops=waterDrops.filter(p=>p.life>0);
+  waterDrops.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.1;p.life-=dt*0.8;});
+}
+function drawParticles(){
+  particles.forEach(p=>{
+    ctx.save();ctx.globalAlpha=p.life/p.maxLife;ctx.fillStyle=p.col;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();
+  });
+  sparks.forEach(p=>{
+    ctx.save();ctx.globalAlpha=p.life;
+    ctx.fillStyle='#FFD700';ctx.shadowColor='#FFD700';ctx.shadowBlur=8;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();
+  });
+  waterDrops.forEach(p=>{
+    ctx.save();ctx.globalAlpha=p.life*0.8;ctx.fillStyle='#4FC3F7';
+    ctx.beginPath();
+    ctx.ellipse(p.x,p.y,3,5,Math.PI*0.1,0,Math.PI*2);ctx.fill();ctx.restore();
+  });
+}
+
+// ═══════════════════════════════════════════
+// DRAWING HELPERS
+// ═══════════════════════════════════════════
+function sky(col1='#87CEEB',col2='#E0F4FF'){
+  const g=ctx.createLinearGradient(0,0,0,H*0.55);
+  g.addColorStop(0,col1);g.addColorStop(1,col2);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H*0.55);
+}
+function ground(){
+  // ground strip
+  ctx.fillStyle='#8B6914';ctx.fillRect(0,H*0.85,W,H*0.15);
+  ctx.fillStyle='#5DBB63';ctx.fillRect(0,H*0.75,W,H*0.12);
+  // grass tufts
+  ctx.fillStyle='#4CAF50';
+  for(let x=0;x<W;x+=40){
+    const g=x*0.7%8;
+    ctx.beginPath();ctx.moveTo(x,H*0.75);ctx.lineTo(x+8,H*0.75-10-g);ctx.lineTo(x+16,H*0.75);ctx.fill();
+  }
+}
+function cloud(x,y,s=1){
+  ctx.fillStyle='white';ctx.shadowColor='rgba(0,0,0,0.1)';ctx.shadowBlur=10;
+  [[0,0,30],[25,-12,22],[50,0,28],[75,-8,20],[-20,5,20]].forEach(([dx,dy,r])=>{
+    ctx.beginPath();ctx.arc(x+dx*s,y+dy*s,r*s,0,Math.PI*2);ctx.fill();
+  });
+  ctx.shadowBlur=0;
+}
+
+function factory(x,y,w,h,col='#F5E6C8'){
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.1)';ctx.fillRect(x+8,y+h+2,w,12);
+  // walls
+  ctx.fillStyle=col;ctx.strokeStyle='#2C1810';ctx.lineWidth=3;
+  ctx.beginPath();ctx.roundRect(x,y,w,h,4);ctx.fill();ctx.stroke();
+  // roof
+  ctx.fillStyle='#D2691E';ctx.strokeStyle='#2C1810';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(x-10,y);ctx.lineTo(x+w/2,y-30);ctx.lineTo(x+w+10,y);ctx.closePath();
+  ctx.fill();ctx.stroke();
+  // windows
+  for(let i=0;i<3;i++){
+    const wx=x+20+i*(w-30)/2.5;
+    ctx.fillStyle='#B3E5FC';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+    ctx.fillRect(wx,y+20,28,28);ctx.strokeRect(wx,y+20,28,28);
+    ctx.strokeStyle='#7BC8E2';
+    ctx.beginPath();ctx.moveTo(wx+14,y+20);ctx.lineTo(wx+14,y+48);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(wx,y+34);ctx.lineTo(wx+28,y+34);ctx.stroke();
+  }
+  // door
+  ctx.fillStyle='#8B4513';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(x+w/2-18,y+h-60,36,60,4,4,0,0);ctx.fill();ctx.stroke();
+  // chimney
+  ctx.fillStyle='#8B4513';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.fillRect(x+w-50,y-50,24,55);ctx.strokeRect(x+w-50,y-50,24,55);
+}
+
+function machine(x,y,w,h,col='#4A90D9',label='',animated=false,progress=0){
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.12)';ctx.fillRect(x+4,y+h,w,8);
+  // body
+  ctx.fillStyle=col;ctx.strokeStyle='#2C1810';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.roundRect(x,y,w,h,6);ctx.fill();ctx.stroke();
+  // top highlight
+  ctx.fillStyle='rgba(255,255,255,0.25)';
+  ctx.beginPath();ctx.roundRect(x+4,y+4,w-8,12,3);ctx.fill();
+  // screen
+  ctx.fillStyle='#1a1a2e';ctx.beginPath();ctx.roundRect(x+8,y+18,w-16,h-38,4);ctx.fill();
+  // screen content
+  if(animated){
+    ctx.fillStyle=`hsl(${(animT*120)%360},80%,65%)`;
+    ctx.fillRect(x+12,y+22,((w-24)*progress),h-46);
+  }
+  // label
+  ctx.fillStyle='white';ctx.font=`bold ${Math.min(12,w/5)}px Fredoka One, cursive`;
+  ctx.textAlign='center';ctx.fillText(label,x+w/2,y+h-8);
+  // legs
+  ctx.fillStyle='#555';
+  ctx.fillRect(x+8,y+h,8,10);ctx.fillRect(x+w-16,y+h,8,10);
+}
+
+function waterWheel(cx,cy,r,angle){
+  ctx.save();ctx.translate(cx,cy);
+  // water channel
+  ctx.fillStyle='#1565C0';ctx.fillRect(-r-30,-r*1.5,22,r*2.5);
+  ctx.fillStyle='#42A5F5';ctx.fillRect(-r-25,-r*1.4,14,r*2.3);
+  // water drops
+  if(Math.random()<0.08) addWaterDrop(cx-r-18,cy-r*0.8);
+  // wheel
+  ctx.rotate(angle);
+  ctx.fillStyle='#5D4037';ctx.strokeStyle='#2C1810';ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+  // spokes
+  for(let i=0;i<6;i++){
+    const a=i*Math.PI/3;
+    ctx.strokeStyle='#8D6E63';ctx.lineWidth=5;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(r*0.85*Math.cos(a),r*0.85*Math.sin(a));ctx.stroke();
+  }
+  // paddles
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI/4;
+    ctx.save();ctx.rotate(a);
+    ctx.fillStyle='#795548';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+    ctx.fillRect(r*0.55,-8,r*0.38,16);ctx.strokeRect(r*0.55,-8,r*0.38,16);
+    ctx.restore();
+  }
+  // hub
+  ctx.fillStyle='#FFD700';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.restore();
+}
+
+function shaft(x1,y,x2){
+  ctx.fillStyle='#9E9E9E';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.fillRect(x1,y-7,x2-x1,14);ctx.strokeRect(x1,y-7,x2-x1,14);
+  // shine
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(x1,y-5,x2-x1,4);
+  // rotation marks
+  for(let x=x1+10;x<x2;x+=30){
+    ctx.strokeStyle='#757575';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,y-7);ctx.lineTo(x,y+7);ctx.stroke();
+  }
+}
+
+function belt(x1,y1,x2,y2,offset=0){
+  ctx.strokeStyle='#5D4037';ctx.lineWidth=6;
+  ctx.setLineDash([16,8]);ctx.lineDashOffset=-offset;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function electricMotor(x,y,w,h,active=false){
+  ctx.fillStyle='#1565C0';ctx.strokeStyle='#2C1810';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.roundRect(x,y,w,h,8);ctx.fill();ctx.stroke();
+  if(active){
+    ctx.shadowColor='#FFD700';ctx.shadowBlur=20;
+    ctx.strokeStyle='#FFD700';ctx.lineWidth=2;
+    ctx.strokeRect(x+3,y+3,w-6,h-6);
+    ctx.shadowBlur=0;
+    // lightning
+    const bx=x+w/2,by=y+h/2;
+    ctx.fillStyle='#FFD700';
+    ctx.beginPath();
+    ctx.moveTo(bx,by-14);ctx.lineTo(bx-8,by);ctx.lineTo(bx-2,by);
+    ctx.lineTo(bx,by+14);ctx.lineTo(bx+8,by);ctx.lineTo(bx+2,by);
+    ctx.closePath();ctx.fill();
+    if(Math.random()<0.04) addSpark(bx+w*0.4,by);
+  }
+  ctx.fillStyle='white';ctx.font='10px Fredoka One,cursive';
+  ctx.textAlign='center';ctx.fillText('MOTOR',x+w/2,y+h+12);
+}
+
+// ═══════════════════════════════════════════
+// BOB — cartoon character
+// ═══════════════════════════════════════════
+function drawBob(x,y,scale=1,mood='happy',hat=true){
+  const s=scale;
+  ctx.save();ctx.translate(x,y+bobBounce*s);
+
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.12)';
+  ctx.beginPath();ctx.ellipse(0,22*s,16*s,6*s,0,0,Math.PI*2);ctx.fill();
+
+  // legs
+  ctx.fillStyle='#37474F';
+  ctx.fillRect(-14*s,0,11*s,22*s);ctx.fillRect(4*s,0,11*s,22*s);
+  // shoes
+  ctx.fillStyle='#1a1a1a';
+  ctx.beginPath();ctx.ellipse(-8*s,22*s,10*s,5*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(10*s,22*s,10*s,5*s,0,0,Math.PI*2);ctx.fill();
+
+  // body
+  const bodyCol = mood==='sad'?'#90A4AE': mood==='excited'?'#EF9A9A':'#5C8DC8';
+  ctx.fillStyle=bodyCol;ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(-16*s,-38*s,32*s,40*s,6*s);ctx.fill();ctx.stroke();
+  // tie
+  ctx.fillStyle='#E53935';
+  ctx.beginPath();ctx.moveTo(0,-36*s);ctx.lineTo(-4*s,-18*s);ctx.lineTo(0,-14*s);ctx.lineTo(4*s,-18*s);ctx.closePath();ctx.fill();
+
+  // arms
+  const armSwing = mood==='excited'?Math.sin(animT*8)*0.5:0.1;
+  ctx.fillStyle=bodyCol;ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.save();ctx.translate(-16*s,-28*s);ctx.rotate(-0.3-armSwing);
+  ctx.beginPath();ctx.roundRect(-6*s,0,12*s,24*s,4*s);ctx.fill();ctx.stroke();ctx.restore();
+  ctx.save();ctx.translate(16*s,-28*s);ctx.rotate(0.3+armSwing);
+  ctx.beginPath();ctx.roundRect(-6*s,0,12*s,24*s,4*s);ctx.fill();ctx.stroke();ctx.restore();
+
+  // head
+  ctx.fillStyle='#FFCC80';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,-52*s,20*s,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+  // eyes
+  const eyeOpen = mood==='sad'?0.4:1;
+  ctx.fillStyle='white';
+  ctx.beginPath();ctx.ellipse(-8*s,-54*s,6*s,7*s*eyeOpen,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(8*s,-54*s,6*s,7*s*eyeOpen,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#1a1a1a';
+  ctx.beginPath();ctx.arc(-8*s,-53*s,3*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(8*s,-53*s,3*s,0,Math.PI*2);ctx.fill();
+  // shine
+  ctx.fillStyle='white';
+  ctx.beginPath();ctx.arc(-6*s,-55*s,1.5*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(10*s,-55*s,1.5*s,0,Math.PI*2);ctx.fill();
+
+  // mouth
+  ctx.strokeStyle='#2C1810';ctx.lineWidth=2;ctx.lineCap='round';
+  if(mood==='happy'){
+    ctx.beginPath();ctx.arc(0,-48*s,8*s,0.1,Math.PI-0.1);ctx.stroke();
+  } else if(mood==='sad'){
+    ctx.beginPath();ctx.arc(0,-42*s,8*s,Math.PI+0.1,-0.1);ctx.stroke();
+  } else if(mood==='excited'){
+    ctx.fillStyle='#1a1a1a';ctx.beginPath();ctx.arc(0,-48*s,8*s,0,Math.PI);ctx.fill();
+    ctx.fillStyle='white';ctx.beginPath();ctx.arc(0,-48*s,5*s,0,Math.PI);ctx.fill();
+  } else if(mood==='shocked'){
+    ctx.fillStyle='#1a1a1a';ctx.beginPath();ctx.arc(0,-47*s,6*s,0,Math.PI*2);ctx.fill();
+  }
+
+  // hat
+  if(hat){
+    ctx.fillStyle='#37474F';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+    ctx.fillRect(-22*s,-75*s,44*s,8*s);ctx.strokeRect(-22*s,-75*s,44*s,8*s);
+    ctx.fillRect(-14*s,-100*s,28*s,27*s);ctx.strokeRect(-14*s,-100*s,28*s,27*s);
+  }
+  ctx.restore();
+}
+
+// Daughter character
+function drawDaughter(x,y,scale=1){
+  const s=scale;
+  ctx.save();ctx.translate(x,y);
+  // legs
+  ctx.fillStyle='#37474F';ctx.fillRect(-10*s,0,8*s,18*s);ctx.fillRect(3*s,0,8*s,18*s);
+  ctx.fillStyle='#1a1a1a';
+  ctx.beginPath();ctx.ellipse(-6*s,18*s,8*s,4*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(7*s,18*s,8*s,4*s,0,0,Math.PI*2);ctx.fill();
+  // body (lab coat)
+  ctx.fillStyle='#ECEFF1';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(-14*s,-34*s,28*s,36*s,6*s);ctx.fill();ctx.stroke();
+  // hair
+  ctx.fillStyle='#5D4037';
+  ctx.beginPath();ctx.arc(0,-48*s,17*s,Math.PI,0);ctx.fill();
+  ctx.fillRect(-17*s,-50*s,6*s,22*s);ctx.fillRect(11*s,-50*s,6*s,20*s);
+  // head
+  ctx.fillStyle='#FFCC80';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,-48*s,17*s,0,Math.PI*2);ctx.fill();ctx.stroke();
+  // eyes
+  ctx.fillStyle='white';ctx.beginPath();ctx.ellipse(-6*s,-50*s,5*s,6*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(6*s,-50*s,5*s,6*s,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#1565C0';ctx.beginPath();ctx.arc(-6*s,-49*s,3*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(6*s,-49*s,3*s,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='white';ctx.beginPath();ctx.arc(-5*s,-50*s,1*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(7*s,-50*s,1*s,0,Math.PI*2);ctx.fill();
+  // smile
+  ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,-44*s,7*s,0.1,Math.PI-0.1);ctx.stroke();
+  // lightbulb prop
+  ctx.fillStyle='#FFD700';ctx.strokeStyle='#2C1810';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(22*s,-58*s,10*s,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#FFF9C4';ctx.beginPath();ctx.arc(22*s,-61*s,5*s,0,Math.PI);ctx.fill();
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════
+// CONVEYOR BELT
+// ═══════════════════════════════════════════
+function conveyorBelt(x,y,w,h,offset=0){
+  ctx.fillStyle='#5D4037';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(x,y,w,h,6);ctx.fill();ctx.stroke();
+  // belt stripes
+  ctx.strokeStyle='#795548';ctx.lineWidth=3;
+  for(let i=0;i<20;i++){
+    const bx=x+(i*28+offset)%w;
+    if(bx>x&&bx<x+w){ctx.beginPath();ctx.moveTo(bx,y+2);ctx.lineTo(bx,y+h-2);ctx.stroke();}
+  }
+  // rollers
+  ctx.fillStyle='#9E9E9E';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(x+h/2,y+h/2,h/2,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.arc(x+w-h/2,y+h/2,h/2,0,Math.PI*2);ctx.fill();ctx.stroke();
+}
+
+// ═══════════════════════════════════════════
+// GEAR
+// ═══════════════════════════════════════════
+function gear(cx,cy,r,teeth,angle,col='#78909C'){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+  ctx.fillStyle=col;ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let i=0;i<teeth*2;i++){
+    const a=i*Math.PI/teeth, ri=i%2===0?r:r*0.68;
+    i===0?ctx.moveTo(ri*Math.cos(a),ri*Math.sin(a)):ctx.lineTo(ri*Math.cos(a),ri*Math.sin(a));
+  }
+  ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#455A64';ctx.beginPath();ctx.arc(0,0,r*0.32,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════
+// COMIC LABEL
+// ═══════════════════════════════════════════
+function comicLabel(text,x,y,col='#FF6B35',size=18){
+  ctx.save();
+  ctx.font=`bold ${size}px Fredoka One,cursive`;
+  ctx.textAlign='center';
+  ctx.strokeStyle='#2C1810';ctx.lineWidth=4;ctx.strokeText(text,x,y);
+  ctx.fillStyle=col;ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+function star(cx,cy,r,col='#FFD700'){
+  ctx.save();ctx.translate(cx,cy);ctx.fillStyle=col;ctx.strokeStyle='#2C1810';ctx.lineWidth=1.5;
+  ctx.beginPath();
+  for(let i=0;i<10;i++){
+    const a=i*Math.PI/5-Math.PI/2, ri=i%2===0?r:r*0.45;
+    i===0?ctx.moveTo(ri*Math.cos(a),ri*Math.sin(a)):ctx.lineTo(ri*Math.cos(a),ri*Math.sin(a));
+  }
+  ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+}
+
+// ═══════════════════════════════════════════
+// SCENE RENDERERS
+// ═══════════════════════════════════════════
+function drawScene0(){ // water factory
+  sky();
+  cloud(W*0.15,H*0.12,0.9);cloud(W*0.6,H*0.08,1.2);cloud(W*0.82,H*0.15,0.7);
+  ground();
+  factory(W*0.28,H*0.32,W*0.5,H*0.45);
+  // water wheel on side
+  waterWheel(W*0.22,H*0.58,55,animT*2.5);
+  // shaft going into building
+  shaft(W*0.26,H*0.58,W*0.78,H*0.58);
+  // machines visible through
+  const fy=H*0.66;
+  [W*0.35,W*0.5,W*0.65].forEach((mx,i)=>{
+    const p=(animT*0.4+i*0.33)%1;
+    machine(mx-28,fy-68,56,60,['#1565C0','#1B5E20','#4A148C'][i],['PRESS','LATHE','DRILL'][i],true,p);
+    belt(mx,H*0.58,mx,fy-8);
+    gear(mx,H*0.56,14,8,animT*(2+i*0.3),'#78909C');
+  });
+  // Bob happy outside
+  bobMood='happy';
+  drawBob(W*0.12,H*0.72,0.9,'happy');
+  // sign
+  ctx.fillStyle='#FFD700';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(W*0.35,H*0.26,W*0.3,32,6);ctx.fill();ctx.stroke();
+  comicLabel("BOB'S FACTORY EST. 1850",W*0.5,H*0.27+20,'#2C1810',16);
+  // water splash particles
+  if(Math.random()<0.06) addWaterDrop(W*0.22,H*0.51);
+}
+
+function drawScene1(){ // shaft problem
+  sky('#B3E0FF','#E8F5FF');
+  cloud(W*0.7,H*0.1,1.0);
+  ground();
+  factory(W*0.2,H*0.3,W*0.65,H*0.5);
+  // inside view — shaft prominent
+  const sy=H*0.56;
+  shaft(W*0.18,sy,W*0.86,sy);
+  waterWheel(W*0.16,sy,50,animT*2);
+  // 4 machines chained
+  [W*0.28,W*0.42,W*0.56,W*0.70].forEach((mx,i)=>{
+    machine(mx-26,H*0.64-58,52,56,['#1565C0','#E65100','#1B5E20','#6A1B9A'][i],['A','B','C','D'][i],true,(animT*0.5+i*0.25)%1);
+    belt(mx,sy,mx,H*0.64-8);
+    gear(mx,sy-12,12,6,animT*(1.5+i*0.4),['#78909C','#FF7043','#66BB6A','#AB47BC'][i]);
+  });
+  // Bob confused
+  drawBob(W*0.88,H*0.72,0.85,'sad');
+  // Problem annotations with arrows
+  const fade=Math.min(1,sTime/2);
+  ctx.globalAlpha=fade;
+  // Red arrow + label on shaft
+  ctx.strokeStyle='#F44336';ctx.lineWidth=3;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(W*0.5,H*0.48);ctx.lineTo(W*0.5,sy-12);ctx.stroke();
+  ctx.setLineDash([]);
+  comicLabel('⚠️ ONE SHAFT = ONE POINT OF FAILURE',W*0.5,H*0.46,('#F44336'),15);
+  // Red box around machines
+  ctx.strokeStyle='#F44336';ctx.lineWidth=3;ctx.setLineDash([8,5]);
+  ctx.strokeRect(W*0.24,H*0.58,W*0.52,H*0.13);
+  ctx.setLineDash([]);
+  comicLabel('CANNOT MOVE THESE — EVER! 😱',W*0.5,H*0.74,'#F44336',14);
+  ctx.globalAlpha=1;
+}
+
+function drawScene2(){ // electric swap
+  sky('#FFF9C4','#FFF3E0');
+  cloud(W*0.2,H*0.09,1.1);cloud(W*0.75,H*0.13,0.8);
+  ground();
+  factory(W*0.22,H*0.3,W*0.56,H*0.48);
+  // Old water wheel being removed (tilted)
+  ctx.save();ctx.translate(W*0.14,H*0.58);ctx.rotate(-0.5);
+  waterWheel(0,0,42,0.3);
+  ctx.restore();
+  // New electric motor going in
+  const mox=W*0.12, moy=H*0.5;
+  electricMotor(mox,moy,70,55,true);
+  // Sparks flying
+  if(Math.random()<0.06) addSpark(mox+70,moy+28);
+  // Same old shaft
+  shaft(W*0.19,H*0.57,W*0.78,H*0.57);
+  // Same machines
+  [W*0.29,W*0.44,W*0.59,W*0.74].forEach((mx,i)=>{
+    machine(mx-25,H*0.64-56,50,54,['#1565C0','#E65100','#1B5E20','#6A1B9A'][i],['PRESS','LATHE','GRIND','DRILL'][i],true,(animT*0.5+i*0.25)%1);
+    belt(mx,H*0.57,mx,H*0.64-2);
+  });
+  // Bob excited
+  drawBob(W*0.87,H*0.71,0.9,'excited');
+  // Excitement stars
+  [[-20,-30],[-35,-50],[10,-45]].forEach(([dx,dy])=>star(W*0.87+dx,H*0.71+dy-80,8));
+  // Same layout indicator fades in
+  const fade2=Math.min(1,Math.max(0,(sTime-4)/2));
+  ctx.globalAlpha=fade2;
+  ctx.fillStyle='rgba(255,235,59,0.15)';
+  ctx.strokeStyle='#F9A825';ctx.lineWidth=3;ctx.setLineDash([10,5]);
+  ctx.strokeRect(W*0.23,H*0.5,W*0.58,H*0.22);
+  ctx.setLineDash([]);
+  comicLabel('SAME LAYOUT 🤔',W*0.52,H*0.5-10,'#F9A825',18);
+  ctx.globalAlpha=1;
+}
+
+function drawScene3(){ // bad results
+  sky('#CFD8DC','#ECEFF1');
+  ground();
+  factory(W*0.25,H*0.32,W*0.5,H*0.46);
+  shaft(W*0.2,H*0.57,W*0.8,H*0.57);
+  electricMotor(W*0.12,H*0.5,65,52,true);
+  [W*0.32,W*0.46,W*0.60,W*0.73].forEach((mx,i)=>{
+    machine(mx-24,H*0.63-54,48,52,['#1565C0','#E65100','#1B5E20','#6A1B9A'][i],null,true,(animT*0.3+i*0.25)%1);
+    belt(mx,H*0.57,mx,H*0.63-2);
+  });
+  // Bob sad with a graph
+  drawBob(W*0.88,H*0.72,0.85,'sad');
+  // sad graph floating near bob
+  ctx.fillStyle='white';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(W*0.82-5,H*0.5,90,65,6);ctx.fill();ctx.stroke();
+  comicLabel('+2% 😭',W*0.82+40,H*0.5+40,'#F44336',22);
+  // money flying away
+  const fade=Math.min(1,sTime/3);
+  ctx.globalAlpha=fade*0.9;
+  ['💸','💸','💸'].forEach((e,i)=>{
+    const bx=W*0.4+i*60+Math.sin(animT*2+i)*15;
+    const by=H*0.25-Math.sin(animT*1.5+i)*20;
+    ctx.font='28px serif';ctx.textAlign='center';
+    ctx.fillText(e,bx,by);
+  });
+  ctx.globalAlpha=1;
+  // RIP water wheel tombstone
+  ctx.fillStyle='#9E9E9E';ctx.strokeStyle='#2C1810';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(W*0.04,H*0.62,44,56,8,8,0,0);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#2C1810';ctx.font='bold 11px Fredoka One,cursive';ctx.textAlign='center';
+  ctx.fillText('R.I.P.',W*0.04+22,H*0.62+24);
+  ctx.fillText('💧 Wheel',W*0.04+22,H*0.62+42);
+}
+
+function drawScene4(){ // eureka
+  sky('#E8F5E9','#C8E6C9');
+  cloud(W*0.1,H*0.1,0.8);cloud(W*0.55,H*0.07,1.3);cloud(W*0.85,H*0.12,0.9);
+  ground();
+  factory(W*0.3,H*0.3,W*0.5,H*0.48);
+  // Bob sitting on bench confused
+  drawBob(W*0.12,H*0.71,0.85,'shocked');
+  // Daughter arrives with lightbulb
+  drawDaughter(W*0.22,H*0.71,0.9);
+  // Big lightbulb explosion
+  const lbScale=0.8+Math.sin(animT*3)*0.15;
+  ctx.save();ctx.translate(W*0.5,H*0.22);ctx.scale(lbScale,lbScale);
+  ctx.fillStyle='#FFD700';ctx.shadowColor='#FFD700';ctx.shadowBlur=40;
+  ctx.beginPath();ctx.arc(0,0,50,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.font='50px serif';ctx.textAlign='center';ctx.fillText('💡',0,18);
+  ctx.restore();
+  // Rays
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI/4+animT*0.5;
+    ctx.strokeStyle='#FFD700';ctx.lineWidth=4;ctx.globalAlpha=0.7;
+    ctx.beginPath();ctx.moveTo(W*0.5+Math.cos(a)*55,H*0.22+Math.sin(a)*55);
+    ctx.lineTo(W*0.5+Math.cos(a)*75,H*0.22+Math.sin(a)*75);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  comicLabel('EUREKA! 🤯',W*0.5,H*0.4,('#FF6B35'),28);
+  // Stars popping
+  const t=Math.min(1,sTime/3);
+  [[W*0.62,H*0.3],[W*0.38,H*0.35],[W*0.7,H*0.42]].forEach(([sx,sy],i)=>{
+    if(t>i*0.3) star(sx,sy,12+Math.sin(animT*4+i)*3,'#FFD700');
+  });
+}
+
+function drawScene5(){ // reimagined
+  sky('#E1F5FE','#B3E5FC');
+  cloud(W*0.08,H*0.08,1.0);cloud(W*0.5,H*0.05,1.4);cloud(W*0.88,H*0.1,0.9);
+  ground();
+  // New open-plan factory (wider, no walls constraining)
+  factory(W*0.05,H*0.25,W*0.9,H*0.52,'#E8F5E9');
+  // Central conveyor
+  const cy2=H*0.65;
+  conveyorBelt(W*0.08,cy2,W*0.84,22,(animT*120)%100);
+  comicLabel('AUTOMATED CONVEYOR',W*0.5,cy2-10,'#1565C0',13);
+  // Free-positioned machines with own motors
+  const cells=[
+    {x:W*0.09,y:H*0.37,col:'#1565C0',lbl:'PRESS',dir:1},
+    {x:W*0.09,y:H*0.5, col:'#1B5E20',lbl:'PRESS2',dir:1},
+    {x:W*0.26,y:H*0.38,col:'#E65100',lbl:'LATHE',dir:0},
+    {x:W*0.42,y:H*0.35,col:'#4A148C',lbl:'GRIND',dir:0},
+    {x:W*0.58,y:H*0.38,col:'#006064',lbl:'DRILL',dir:0},
+    {x:W*0.74,y:H*0.37,col:'#B71C1C',lbl:'WELD',dir:0},
+    {x:W*0.74,y:H*0.5, col:'#F57F17',lbl:'QC',dir:-1},
+  ];
+  cells.forEach((c,i)=>{
+    machine(c.x,c.y,56,52,c.col,c.lbl,true,(animT*0.6+i*0.14)%1);
+    electricMotor(c.x+10,c.y+52,36,22,true);
+    // connection to conveyor
+    ctx.strokeStyle='#4CAF50';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(c.x+28,c.y+52);ctx.lineTo(c.x+28,cy2);ctx.stroke();
+    ctx.setLineDash([]);
+  });
+  // Workers free to be anywhere
+  drawBob(W*0.48,H*0.72,0.8,'excited');
+  drawDaughter(W*0.58,H*0.72,0.75);
+  // Stars and celebration
+  [W*0.15,W*0.3,W*0.65,W*0.8,W*0.9].forEach((sx,i)=>{
+    star(sx,H*0.2+Math.sin(animT*2+i)*12,10+i%3*4,'#FFD700');
+  });
+  // Output label
+  const fade=Math.min(1,Math.max(0,(sTime-2)/2));
+  ctx.globalAlpha=fade;
+  ctx.fillStyle='rgba(76,175,80,0.15)';ctx.strokeStyle='#4CAF50';ctx.lineWidth=3;
+  ctx.beginPath();ctx.roundRect(W*0.04,H*0.28,W*0.92,H*0.5,12);ctx.fill();ctx.stroke();
+  comicLabel('×3.4 OUTPUT  🚀  -68% DOWNTIME',W*0.5,H*0.87,'#2E7D32',20);
+  ctx.globalAlpha=1;
+  // confetti particles
+  if(Math.random()<0.08){
+    addParticle(Math.random()*W,H*0.3,
+      `hsl(${Math.random()*360},90%,60%)`,
+      (Math.random()-0.5)*3,Math.random()*2+1,3,5);
+  }
+}
+
+// ═══════════════════════════════════════════
+// MAIN DRAW
+// ═══════════════════════════════════════════
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const fade=Math.min(1,sTime*2);
+  ctx.globalAlpha=fade;
+  switch(SCENES[scene].type){
+    case 'water':         drawScene0();break;
+    case 'water_problem': drawScene1();break;
+    case 'electric_swap': drawScene2();break;
+    case 'bad_results':   drawScene3();break;
+    case 'eureka':        drawScene4();break;
+    case 'reimagined':    drawScene5();break;
+  }
+  ctx.globalAlpha=1;
+  drawParticles();
+}
+
+// ═══════════════════════════════════════════
+// BOB BOUNCE
+// ═══════════════════════════════════════════
+function updateBob(dt){
+  bobBounceV+=dt*18;
+  bobBounce+=bobBounceV*dt;
+  if(bobBounce>0){bobBounce=0;bobBounceV=-Math.abs(bobBounceV)*0.4;}
+  if(Math.abs(bobBounceV)<0.5 && bobBounce>=0) bobBounceV=0;
+}
+
+// ═══════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════
+function showSpeech(text,x,y){
+  const el=document.getElementById('speech');
+  el.textContent=text;
+  el.style.left=x+'px';el.style.top=y+'px';
+  el.classList.add('show');
+}
+function hideSpeech(){document.getElementById('speech').classList.remove('show');}
+
+function showComicFx(text,x,y){
+  const el=document.getElementById('comic-fx');
+  el.textContent=text;el.style.left=x+'px';el.style.top=y+'px';
+  el.classList.add('pop');
+  setTimeout(()=>el.classList.remove('pop'),1200);
+}
+
+function updateUI(){
+  const sc=SCENES[scene];
+  // Chapter
+  const ch=document.getElementById('chapter');
+  ch.textContent=`Scene ${scene+1}/6  •  ${sc.title}`;
+  if(sTime>0.3) ch.classList.add('show'); else ch.classList.remove('show');
+  // Narration
+  const nar=document.getElementById('narration');
+  document.getElementById('nar-text').textContent=sc.narration;
+  if(sTime>1.2) nar.classList.add('show'); else nar.classList.remove('show');
+  // Speech bubble timing
+  if(sc.speech && sTime>sc.speechDelay && sTime<sc.speechDelay+6){
+    showSpeech(sc.speech, W*0.14, H*0.55);
+  } else hideSpeech();
+  // Comic FX
+  if(sc.comicFx && Math.abs(sTime-sc.comicDelay)<0.05){
+    showComicFx(sc.comicFx, W*0.5-60, H*0.35);
+  }
+  // Metrics
+  const mp=document.getElementById('metrics-popup');
+  if(sc.metrics && sTime>3){
+    mp.classList.add('show');
+    document.getElementById('mv-out').textContent=sc.metrics.out;
+    document.getElementById('mv-out').className='mval '+sc.metrics.outC;
+    document.getElementById('mv-eng').textContent=sc.metrics.eng;
+    document.getElementById('mv-eng').className='mval '+sc.metrics.engC;
+    document.getElementById('mv-dwn').textContent=sc.metrics.dwn;
+    document.getElementById('mv-dwn').className='mval '+sc.metrics.dwnC;
+  } else mp.classList.remove('show');
+  // Progress
+  let elapsed=0;
+  for(let i=0;i<scene;i++) elapsed+=SCENES[i].dur;
+  elapsed+=sTime;
+  document.getElementById('prog-fill').style.width=(elapsed/TOTAL_DUR*100)+'%';
+  const s=Math.floor(elapsed),m=Math.floor(s/60),ss=s%60;
+  document.getElementById('timer').textContent=`${m}:${ss<10?'0'+ss:ss}`;
+  // Dots
+  document.querySelectorAll('.sdot').forEach((d,i)=>{
+    d.className='sdot'+(i===scene?' active':i<scene?' done':'');
+  });
+  document.getElementById('scene-num-display')&&
+    (document.getElementById('scene-num-display').textContent=scene+1);
+}
+
+// ═══════════════════════════════════════════
+// LOOP
+// ═══════════════════════════════════════════
+let raf;
+function loop(ts){
+  if(lastTs===null) lastTs=ts;
+  const dt=Math.min((ts-lastTs)/1000,0.05);
+  lastTs=ts;
+  if(playing){
+    sTime+=dt; totalTime+=dt; animT+=dt;
+    updateBob(dt);
+    updateParticles(dt);
+    if(sTime>=SCENES[scene].dur){
+      if(scene<SCENES.length-1) gotoScene(scene+1);
+      else { playing=false; document.getElementById('playbtn').textContent='▶ Replay'; }
+    }
+  }
+  draw();
+  updateUI();
+  raf=requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════
+function buildDots(){
+  const c=document.getElementById('dots');c.innerHTML='';
+  SCENES.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='sdot'+(i===scene?' active':i<scene?' done':'');
+    d.onclick=()=>gotoScene(i);c.appendChild(d);
+  });
+}
+buildDots();
+
+function gotoScene(i){
+  scene=Math.max(0,Math.min(SCENES.length-1,i));
+  sTime=0;animT=0;lastTs=null;
+  particles=[];sparks=[];waterDrops=[];
+  bobBounce=-8;bobBounceV=-12;
+  hideSpeech();
+  document.getElementById('metrics-popup').classList.remove('show');
+  document.getElementById('chapter').classList.remove('show');
+  document.getElementById('narration').classList.remove('show');
+  buildDots();
+}
+function prevScene(){if(scene>0)gotoScene(scene-1);}
+function nextScene(){if(scene<SCENES.length-1)gotoScene(scene+1);}
+function togglePlay(){
+  playing=!playing;lastTs=null;
+  const b=document.getElementById('playbtn');
+  if(playing){
+    if(scene===SCENES.length-1&&sTime>=SCENES[scene].dur) gotoScene(0);
+    b.textContent='⏸ Pause';
+  } else b.textContent='▶ Play';
+}
+function startVideo(){
+  document.getElementById('title-card').classList.add('gone');
+  playing=true;started=true;
+  requestAnimationFrame(loop);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault();if(!started)startVideo();else togglePlay();}
+  if(e.key==='ArrowRight') nextScene();
+  if(e.key==='ArrowLeft')  prevScene();
+});
+// Click canvas to play/pause
+document.getElementById('scene').addEventListener('click',()=>{if(started)togglePlay();});
+// Start render loop for title card preview
+requestAnimationFrame(function preview(ts){
+  resize(); draw();
+  if(!started) requestAnimationFrame(preview);
+});
+</script>
+</body>
+</html>
