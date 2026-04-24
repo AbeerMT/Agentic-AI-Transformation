@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic AI Governance — Executive Summary</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --navy: #0d1b2a;
+  --blue: #1a56db;
+  --blue-light: #3b82f6;
+  --teal: #0d9488;
+  --indigo: #4f46e5;
+  --purple: #7c3aed;
+  --red: #dc2626;
+  --sky: #0284c7;
+  --green: #16a34a;
+  --amber: #d97706;
+  --white: #ffffff;
+  --off: #f8fafc;
+  --grey: #64748b;
+  --border: #e2e8f0;
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:#f0f4f8;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:32px 16px 48px;
+  min-height:100vh;
+}
+
+/* ── CAROUSEL WRAPPER ─────────────────────────────── */
+.carousel-wrap{
+  width:100%;
+  max-width:640px;
+}
+
+.carousel-title{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--grey);
+  text-align:center;
+  margin-bottom:20px;
+}
+
+/* ── SLIDE COUNTER ────────────────────────────────── */
+.slide-counter{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-bottom:16px;
+}
+.dot{
+  width:28px;height:4px;border-radius:2px;
+  background:var(--border);
+  cursor:pointer;
+  transition:background .25s,width .25s;
+}
+.dot.active{ background:var(--blue); width:36px; }
+
+/* ── SLIDE TRACK ──────────────────────────────────── */
+.track-outer{
+  overflow:hidden;
+  border-radius:16px;
+  box-shadow:0 8px 40px rgba(13,27,42,0.14), 0 2px 8px rgba(13,27,42,0.06);
+}
+.track{
+  display:flex;
+  transition:transform .45s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── SLIDE BASE ───────────────────────────────────── */
+.slide{
+  min-width:100%;
+  padding:0;
+  position:relative;
+  overflow:hidden;
+}
+
+/* ── SLIDE 1 — COVER ──────────────────────────────── */
+.s1{
+  background:var(--navy);
+  min-height:400px;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:48px 44px;
+}
+.s1-eyebrow{
+  font-family:'DM Mono',monospace;
+  font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(59,130,246,0.85);margin-bottom:20px;
+}
+.s1-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(32px,5vw,44px);
+  font-weight:800;line-height:1.08;
+  color:var(--white);margin-bottom:16px;
+}
+.s1-title span{ color:#60a5fa; }
+.s1-sub{
+  font-size:14px;color:rgba(255,255,255,0.55);
+  line-height:1.6;max-width:420px;margin-bottom:32px;
+}
+.s1-chips{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:36px;
+}
+.s1-chip{
+  font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:.08em;
+  padding:5px 12px;border-radius:20px;
+  border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.65);
+  background:rgba(255,255,255,0.05);
+}
+.s1-byline{
+  font-size:12px;color:rgba(255,255,255,0.35);
+  border-top:1px solid rgba(255,255,255,0.08);
+  padding-top:16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.s1-byline strong{ color:rgba(255,255,255,0.65);font-weight:500; }
+/* decorative arc */
+.s1::after{
+  content:'';position:absolute;right:-80px;top:-80px;
+  width:320px;height:320px;border-radius:50%;
+  background:radial-gradient(circle,rgba(59,130,246,0.12),transparent 70%);
+  pointer-events:none;
+}
+
+/* ── SLIDE 2 — 5 ACCOUNTABILITIES ────────────────── */
+.s2{ background:var(--white); min-height:400px; padding:36px 40px; }
+.slide-label{
+  font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:6px;
+}
+.slide-h{
+  font-family:'Playfair Display',serif;
+  font-size:24px;font-weight:700;color:var(--navy);
+  line-height:1.2;margin-bottom:6px;
+}
+.slide-intro{
+  font-size:12.5px;color:var(--grey);line-height:1.55;
+  margin-bottom:22px;border-bottom:1px solid var(--border);padding-bottom:16px;
+}
+.acct-list{ display:flex;flex-direction:column;gap:10px; }
+.acct-item{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:12px 14px;border-radius:8px;
+  background:var(--off);border-left:3px solid var(--blue);
+  transition:border-color .2s;
+}
+.acct-num{
+  font-family:'Playfair Display',serif;
+  font-size:22px;font-weight:800;color:var(--blue);
+  line-height:1;flex-shrink:0;min-width:20px;
+}
+.acct-body{}
+.acct-title{
+  font-size:12.5px;font-weight:600;color:var(--navy);margin-bottom:2px;
+}
+.acct-desc{ font-size:11.5px;color:var(--grey);line-height:1.45; }
+
+/* ── SLIDE 3 — DOMAIN MAP ─────────────────────────── */
+.s3{ background:var(--navy);min-height:400px;padding:36px 40px; }
+.s3 .slide-label{ color:rgba(96,165,250,0.85); }
+.s3 .slide-h{ color:var(--white); }
+.s3 .slide-intro{ color:rgba(255,255,255,0.45);border-bottom-color:rgba(255,255,255,0.1); }
+.domain-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.domain-card{
+  padding:12px 14px;border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.04);
+  transition:background .2s;
+}
+.domain-card:hover{ background:rgba(255,255,255,0.07); }
+.dc-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:5px;
+}
+.dc-badge{
+  font-family:'DM Mono',monospace;font-size:9.5px;font-weight:500;
+  padding:2px 7px;border-radius:4px;white-space:nowrap;
+}
+.dc-name{ font-size:11.5px;font-weight:600;color:var(--white); }
+.dc-desc{ font-size:10.5px;color:rgba(255,255,255,0.42);line-height:1.4; }
+/* anchor card full width */
+.domain-anchor{
+  grid-column:1/-1;
+  border-color:rgba(59,130,246,0.35);
+  background:rgba(59,130,246,0.08);
+}
+
+/* ── SLIDE 4 — WHAT COULD GO WRONG ───────────────── */
+.s4{ background:var(--white);min-height:400px;padding:36px 40px; }
+.risk-grid{ display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+.risk-card{
+  padding:13px 14px;border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--off);
+}
+.risk-icon{ font-size:18px;margin-bottom:7px; }
+.risk-title{ font-size:12px;font-weight:700;color:var(--navy);margin-bottom:4px; }
+.risk-desc{ font-size:11px;color:var(--grey);line-height:1.45; }
+
+/* ── SLIDE 5 — HOW YOU KNOW IT IS WORKING ─────────── */
+.s5{ background:var(--navy);min-height:400px;padding:36px 40px; }
+.s5 .slide-label{ color:rgba(52,211,153,0.85); }
+.s5 .slide-h{ color:var(--white); }
+.s5 .slide-intro{ color:rgba(255,255,255,0.45);border-bottom-color:rgba(255,255,255,0.1); }
+.metric-grid{ display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+.metric-card{
+  padding:13px 14px;border-radius:8px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+}
+.metric-value{
+  font-family:'Playfair Display',serif;
+  font-size:28px;font-weight:800;line-height:1;margin-bottom:5px;
+}
+.metric-label{ font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:3px; }
+.metric-desc{ font-size:10.5px;color:rgba(255,255,255,0.38);line-height:1.4; }
+
+/* ── SLIDE 6 — MINIMUM VIABLE POSTURE ─────────────── */
+.s6{ background:var(--white);min-height:400px;padding:36px 40px; }
+.mvp-steps{ display:flex;flex-direction:column;gap:0; }
+.mvp-step{
+  display:flex;gap:16px;padding:13px 0;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.mvp-step:last-child{ border-bottom:none; }
+.mvp-line{
+  display:flex;flex-direction:column;align-items:center;flex-shrink:0;
+}
+.mvp-dot{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:10px;font-weight:600;
+  flex-shrink:0;
+}
+.mvp-connector{
+  width:2px;flex:1;background:var(--border);margin:3px 0;min-height:12px;
+}
+.mvp-body{ padding-top:4px; }
+.mvp-pillar{
+  font-family:'DM Mono',monospace;
+  font-size:9.5px;letter-spacing:.08em;
+  margin-bottom:3px;font-weight:500;
+}
+.mvp-title{ font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:2px; }
+.mvp-desc{ font-size:11px;color:var(--grey);line-height:1.45; }
+
+/* ── SLIDE 7 — CLOSING ────────────────────────────── */
+.s7{
+  background:linear-gradient(135deg,#0d1b2a 0%,#1a2744 50%,#0d1b2a 100%);
+  min-height:400px;padding:48px 44px;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.s7-quote{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(18px,3vw,24px);
+  font-weight:700;
+  color:var(--white);
+  line-height:1.4;
+  margin-bottom:24px;
+  position:relative;
+  padding-left:20px;
+}
+.s7-quote::before{
+  content:'"';
+  position:absolute;left:-4px;top:-8px;
+  font-size:64px;font-family:'Playfair Display',serif;
+  color:rgba(59,130,246,0.25);line-height:1;
+}
+.s7-quote em{ color:#60a5fa;font-style:normal; }
+.s7-tags{
+  display:flex;flex-wrap:wrap;gap:7px;margin-bottom:32px;
+}
+.s7-tag{
+  font-family:'DM Mono',monospace;font-size:10px;
+  padding:4px 12px;border-radius:20px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.5);
+}
+.s7-sig{
+  display:flex;align-items:center;gap:12px;
+  padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);
+}
+.s7-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,#1a56db,#7c3aed);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;color:white;
+  font-family:'Playfair Display',serif;
+  flex-shrink:0;
+}
+.s7-name{ font-size:13px;font-weight:600;color:var(--white); }
+.s7-role{ font-size:11px;color:rgba(255,255,255,0.38); }
+
+/* ── NAVIGATION ───────────────────────────────────── */
+.nav-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:16px;
+  padding:0 4px;
+}
+.nav-btn{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 20px;border-radius:8px;
+  border:1.5px solid var(--border);
+  background:white;
+  font-family:'DM Sans',sans-serif;
+  font-size:12.5px;font-weight:600;color:var(--grey);
+  cursor:pointer;transition:all .18s;
+  box-shadow:0 1px 4px rgba(0,0,0,0.05);
+}
+.nav-btn:hover:not(:disabled){ border-color:var(--blue);color:var(--blue);background:#eff6ff; }
+.nav-btn:disabled{ opacity:.3;cursor:not-allowed; }
+.nav-btn.primary{
+  background:var(--navy);color:white;border-color:var(--navy);
+}
+.nav-btn.primary:hover:not(:disabled){ background:#1e3a5f;border-color:#1e3a5f; }
+.slide-info{
+  font-family:'DM Mono',monospace;
+  font-size:11px;color:var(--grey);
+}
+
+/* ── EMAIL NOTE ───────────────────────────────────── */
+.email-note{
+  margin-top:24px;
+  padding:12px 16px;
+  background:white;border-radius:8px;
+  border:1px solid var(--border);
+  font-size:11.5px;color:var(--grey);
+  line-height:1.55;max-width:640px;width:100%;
+}
+.email-note strong{ color:var(--navy); }
+
+/* ── ANIMATIONS ───────────────────────────────────── */
+@keyframes fadeSlideIn{
+  from{opacity:0;transform:translateY(12px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.slide-entering .acct-item,
+.slide-entering .domain-card,
+.slide-entering .risk-card,
+.slide-entering .metric-card,
+.slide-entering .mvp-step{
+  animation:fadeSlideIn .4s ease both;
+}
+.slide-entering .acct-item:nth-child(1){animation-delay:.05s;}
+.slide-entering .acct-item:nth-child(2){animation-delay:.10s;}
+.slide-entering .acct-item:nth-child(3){animation-delay:.15s;}
+.slide-entering .acct-item:nth-child(4){animation-delay:.20s;}
+.slide-entering .acct-item:nth-child(5){animation-delay:.25s;}
+.slide-entering .domain-card:nth-child(1){animation-delay:.04s;}
+.slide-entering .domain-card:nth-child(2){animation-delay:.08s;}
+.slide-entering .domain-card:nth-child(3){animation-delay:.12s;}
+.slide-entering .domain-card:nth-child(4){animation-delay:.16s;}
+.slide-entering .domain-card:nth-child(5){animation-delay:.20s;}
+.slide-entering .domain-card:nth-child(6){animation-delay:.24s;}
+.slide-entering .domain-card:nth-child(7){animation-delay:.28s;}
+.slide-entering .risk-card:nth-child(1){animation-delay:.05s;}
+.slide-entering .risk-card:nth-child(2){animation-delay:.10s;}
+.slide-entering .risk-card:nth-child(3){animation-delay:.15s;}
+.slide-entering .risk-card:nth-child(4){animation-delay:.20s;}
+.slide-entering .risk-card:nth-child(5){animation-delay:.25s;}
+.slide-entering .risk-card:nth-child(6){animation-delay:.30s;}
+.slide-entering .metric-card:nth-child(1){animation-delay:.05s;}
+.slide-entering .metric-card:nth-child(2){animation-delay:.10s;}
+.slide-entering .metric-card:nth-child(3){animation-delay:.15s;}
+.slide-entering .metric-card:nth-child(4){animation-delay:.20s;}
+.slide-entering .mvp-step:nth-child(1){animation-delay:.05s;}
+.slide-entering .mvp-step:nth-child(2){animation-delay:.12s;}
+.slide-entering .mvp-step:nth-child(3){animation-delay:.19s;}
+.slide-entering .mvp-step:nth-child(4){animation-delay:.26s;}
+.slide-entering .mvp-step:nth-child(5){animation-delay:.33s;}
+</style>
+</head>
+<body>
+
+<div class="carousel-wrap">
+  <div class="carousel-title">Agentic AI Governance · Executive Summary · 7 slides</div>
+
+  <!-- Dot indicators -->
+  <div class="slide-counter" id="dots"></div>
+
+  <!-- Track -->
+  <div class="track-outer">
+    <div class="track" id="track">
+
+      <!-- ── SLIDE 1 · COVER ─────────────────────────────── -->
+      <div class="slide s1">
+        <div class="s1-eyebrow">Agentic AI Governance · 2025</div>
+        <div class="s1-title">What every<br>senior leader<br>must <span>own</span></div>
+        <div class="s1-sub">This is not a technology briefing. It is a governance briefing. Five accountabilities that cannot be delegated — regardless of model capability.</div>
+        <div class="s1-chips">
+          <span class="s1-chip">1 Anchor</span>
+          <span class="s1-chip">6 Domains</span>
+          <span class="s1-chip">20 Pillars</span>
+          <span class="s1-chip">For Senior Leaders</span>
+        </div>
+        <div class="s1-byline">
+          <span>Agentic AI Governance Framework</span>
+          <strong>Abeer Makki</strong>
+        </div>
+      </div>
+
+      <!-- ── SLIDE 2 · 5 ACCOUNTABILITIES ───────────────── -->
+      <div class="slide s2">
+        <div class="slide-label">Your accountability</div>
+        <div class="slide-h">5 things you cannot delegate</div>
+        <div class="slide-intro">Everything below these five sits with your technical and legal teams. These five sit with you.</div>
+        <div class="acct-list">
+          <div class="acct-item" style="border-left-color:#2563eb;">
+            <div class="acct-num" style="color:#2563eb;">1</div>
+            <div class="acct-body">
+              <div class="acct-title">Approve which decisions are non-delegable to AI</div>
+              <div class="acct-desc">Explicitly classify which decisions must always have a human owner — regardless of what AI can technically do.</div>
+            </div>
+          </div>
+          <div class="acct-item" style="border-left-color:#4f46e5;">
+            <div class="acct-num" style="color:#4f46e5;">2</div>
+            <div class="acct-body">
+              <div class="acct-title">Name an owner for every agentic system</div>
+              <div class="acct-desc">Every AI agent needs a named human accountable for its operation, outcomes, and authority to shut it down. No anonymous ownership.</div>
+            </div>
+          </div>
+          <div class="acct-item" style="border-left-color:#7c3aed;">
+            <div class="acct-num" style="color:#7c3aed;">3</div>
+            <div class="acct-body">
+              <div class="acct-title">Approve the oversight mode for each system</div>
+              <div class="acct-desc">Decide whether each AI system requires human approval on every action, human monitoring with the ability to intervene, or human policy-setting with post-hoc audit.</div>
+            </div>
+          </div>
+          <div class="acct-item" style="border-left-color:#16a34a;">
+            <div class="acct-num" style="color:#16a34a;">4</div>
+            <div class="acct-body">
+              <div class="acct-title">Receive the value realisation report quarterly</div>
+              <div class="acct-desc">If AI is not changing decision quality, speed, or cost — it is not transformation. You should be seeing that evidence every quarter.</div>
+            </div>
+          </div>
+          <div class="acct-item" style="border-left-color:#dc2626;">
+            <div class="acct-num" style="color:#dc2626;">5</div>
+            <div class="acct-body">
+              <div class="acct-title">Hold the override authority when escalation reaches you</div>
+              <div class="acct-desc">Governance escalation must have a defined endpoint. That endpoint is you. Override authority must have clear trigger conditions.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SLIDE 3 · DOMAIN MAP ────────────────────────── -->
+      <div class="slide s3">
+        <div class="slide-label">The framework</div>
+        <div class="slide-h" style="color:white;">6 domains your teams govern</div>
+        <div class="slide-intro">Each domain is delegated below you. You need to know it exists, who owns it, and when it escalates to your level.</div>
+        <div class="domain-grid">
+          <div class="domain-card domain-anchor">
+            <div class="dc-header">
+              <span class="dc-badge" style="background:rgba(59,130,246,0.2);color:#60a5fa;">ANCHOR</span>
+              <span class="dc-name">Strategic Intent</span>
+            </div>
+            <div class="dc-desc">Why AI exists in this organisation and what it is allowed to change. Governs every domain below it. This one sits with you.</div>
+          </div>
+          <div class="domain-card">
+            <div class="dc-header">
+              <span class="dc-badge" style="background:rgba(13,148,136,0.2);color:#2dd4bf;">D1</span>
+              <span class="dc-name">Readiness</span>
+            </div>
+            <div class="dc-desc">What must be true before any agent is deployed.</div>
+          </div>
+          <div class="domain-card">
+            <div class="dc-header">
+              <span class="dc-badge" style="background:rgba(79,70,229,0.2);color:#818cf8;">D2</span>
+              <span class="dc-name">Control</span>
+            </div>
+            <div class="dc-desc">Who is accountable and how decisions are made visible.</div>
+          </div>
+          <div class="domain-card">
+            <div class="dc-header">
+              <span class="dc-badge" style="background:rgba(124,58,237,0.2);color:#a78bfa;">D3</span>
+              <span class="dc-name">Agentic-Native</span>
+            </div>
+            <div class="dc-desc">Controls specific to agents — blast radius, memory, orchestration.</div>
+          </div>
+          <div class="domain-card">
+            <div class="dc-header">
+              <span class="dc-badge" style="background:rgba(220,38,38,0.2);color:#f87171;">D4</span>
+              <span class="dc-name">Trust</span>
+            </div>
+            <div class="dc-desc">Making outputs defensible to regulators and customers.</div>
+          </div>
+          <div class="domain-card">
+            <div class="dc-header">
+              <span class="dc-badge" style="background:rgba(2,132,199,0.2);color:#38bdf8;">D5</span>
+              <span class="dc-name">Assurance</span>
+            </div>
+            <div class="dc-desc">Proving it works, continuously — not just at launch.</div>
+          </div>
+          <div class="domain-card">
+            <div class="dc-header">
+              <span class="dc-badge" style="background:rgba(22,163,74,0.2);color:#4ade80;">D6</span>
+              <span class="dc-name">Value Realisation</span>
+            </div>
+            <div class="dc-desc">Did AI actually change decision quality, speed, or cost?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SLIDE 4 · WHAT COULD GO WRONG ──────────────── -->
+      <div class="slide s4">
+        <div class="slide-label">The risk picture</div>
+        <div class="slide-h">What could go wrong — at your level</div>
+        <div class="slide-intro">These are not technical failures. These are governance failures. They happen when accountability is unclear or absent.</div>
+        <div class="risk-grid">
+          <div class="risk-card">
+            <div class="risk-icon">⚖️</div>
+            <div class="risk-title">No named owner</div>
+            <div class="risk-desc">An agent causes harm and no one is accountable. The regulator asks who owns it. There is no answer.</div>
+          </div>
+          <div class="risk-card">
+            <div class="risk-icon">🔄</div>
+            <div class="risk-title">Uncontrolled execution</div>
+            <div class="risk-desc">An agent sends customer communications, moves funds, or deploys changes without anyone knowing the damage limit.</div>
+          </div>
+          <div class="risk-card">
+            <div class="risk-icon">📉</div>
+            <div class="risk-title">No value evidence</div>
+            <div class="risk-desc">Millions spent on AI with no measurable change in decision quality, speed, or cost. Governance becomes a cost centre.</div>
+          </div>
+          <div class="risk-card">
+            <div class="risk-icon">🚨</div>
+            <div class="risk-title">Escalation with no endpoint</div>
+            <div class="risk-desc">A governance crisis escalates through the chain and reaches you with no predefined override authority or intervention options.</div>
+          </div>
+          <div class="risk-card">
+            <div class="risk-icon">📋</div>
+            <div class="risk-title">Compliance theatre</div>
+            <div class="risk-desc">Governance exists on paper but not in operation. The audit passes. The next incident reveals nothing was actually enforced.</div>
+          </div>
+          <div class="risk-card">
+            <div class="risk-icon">👥</div>
+            <div class="risk-title">Culture failure</div>
+            <div class="risk-desc">Technology deployed, governance designed, people unchanged. The programme fails because operators never became governors.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SLIDE 5 · HOW YOU KNOW ──────────────────────── -->
+      <div class="slide s5">
+        <div class="slide-label">Board-visible metrics</div>
+        <div class="slide-h" style="color:white;">How you know it is working</div>
+        <div class="slide-intro">These are the four questions a quarterly governance report must answer. If your team cannot answer all four, governance is not operational.</div>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-value" style="color:#34d399;">↓</div>
+            <div class="metric-label">Decision cost</div>
+            <div class="metric-desc">Cost per decision before AI vs after. Is the economics changing?</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" style="color:#60a5fa;">↑</div>
+            <div class="metric-label">Decision quality</div>
+            <div class="metric-desc">Accuracy, error rate, reversal rate. Is quality measurably better?</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" style="color:#f472b6;">⚡</div>
+            <div class="metric-label">Time-to-decision</div>
+            <div class="metric-desc">Speed improvement with attribution to AI, not other changes.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" style="color:#a78bfa;">🛡</div>
+            <div class="metric-label">Risk incidents</div>
+            <div class="metric-desc">Number and severity of governance incidents. Trend direction matters.</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
+          <div style="font-size:11.5px;color:rgba(255,255,255,0.5);line-height:1.5;">
+            <strong style="color:rgba(255,255,255,0.75);">Kill criteria:</strong> If an agent cannot demonstrate improvement against its baseline after a defined period, it must be reviewed, constrained, or decommissioned. This decision sits with the named owner and escalates to you.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SLIDE 6 · MINIMUM VIABLE POSTURE ───────────── -->
+      <div class="slide s6">
+        <div class="slide-label">Where to start</div>
+        <div class="slide-h">Minimum viable governance posture</div>
+        <div class="slide-intro">Before any agent touches production, these five pillars must be in place. In this order.</div>
+        <div class="mvp-steps">
+          <div class="mvp-step">
+            <div class="mvp-line">
+              <div class="mvp-dot" style="background:#dbeafe;color:#2563eb;">1.1</div>
+              <div class="mvp-connector"></div>
+            </div>
+            <div class="mvp-body">
+              <div class="mvp-pillar" style="color:#2563eb;">Domain 1 · Readiness</div>
+              <div class="mvp-title">Capability Assessment</div>
+              <div class="mvp-desc">Know honestly what your organisation can and cannot do before choosing a deployment path.</div>
+            </div>
+          </div>
+          <div class="mvp-step">
+            <div class="mvp-line">
+              <div class="mvp-dot" style="background:#e0e7ff;color:#4f46e5;">2.1</div>
+              <div class="mvp-connector"></div>
+            </div>
+            <div class="mvp-body">
+              <div class="mvp-pillar" style="color:#4f46e5;">Domain 2 · Control</div>
+              <div class="mvp-title">Named Accountability</div>
+              <div class="mvp-desc">Every agent has a named human owner before it is switched on. No exceptions.</div>
+            </div>
+          </div>
+          <div class="mvp-step">
+            <div class="mvp-line">
+              <div class="mvp-dot" style="background:#e0e7ff;color:#4f46e5;">2.4</div>
+              <div class="mvp-connector"></div>
+            </div>
+            <div class="mvp-body">
+              <div class="mvp-pillar" style="color:#4f46e5;">Domain 2 · Control</div>
+              <div class="mvp-title">Human Oversight Mode Assigned</div>
+              <div class="mvp-desc">Every agent has a defined oversight mode — in-the-loop, on-the-loop, or in-command — approved before deployment.</div>
+            </div>
+          </div>
+          <div class="mvp-step">
+            <div class="mvp-line">
+              <div class="mvp-dot" style="background:#fee2e2;color:#dc2626;">4.1</div>
+              <div class="mvp-connector"></div>
+            </div>
+            <div class="mvp-body">
+              <div class="mvp-pillar" style="color:#dc2626;">Domain 4 · Trust</div>
+              <div class="mvp-title">Security & Risk Assessment</div>
+              <div class="mvp-desc">Threat model completed. Risk tier assigned. Incident taxonomy defined. Response plan in place.</div>
+            </div>
+          </div>
+          <div class="mvp-step">
+            <div class="mvp-line">
+              <div class="mvp-dot" style="background:#dcfce7;color:#16a34a;">S</div>
+            </div>
+            <div class="mvp-body">
+              <div class="mvp-pillar" style="color:#16a34a;">Strategic Intent · Anchor</div>
+              <div class="mvp-title">Strategic Intent Documented & Approved</div>
+              <div class="mvp-desc">The why, the boundaries, the non-delegable decisions, and the override authority — approved at board or executive committee level.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SLIDE 7 · CLOSING ───────────────────────────── -->
+      <div class="slide s7">
+        <div class="s7-quote">
+          Governance teams that cannot report <em>value realisation</em> become cost centres. Those that can become <em>strategic advisors</em> to the CEO.
+        </div>
+        <div class="s7-tags">
+          <span class="s7-tag">#AgenticAI</span>
+          <span class="s7-tag">#AIGovernance</span>
+          <span class="s7-tag">#ResponsibleAI</span>
+          <span class="s7-tag">#DigitalTransformation</span>
+          <span class="s7-tag">#Leadership</span>
+        </div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.38);line-height:1.6;margin-bottom:24px;">
+          Full framework: 6 domains · 20 pillars · covering Strategic Intent, Readiness, Control, Agentic-Native Controls, Trust, Assurance, and Value Realisation. Available on request.
+        </div>
+        <div class="s7-sig">
+          <div class="s7-avatar">AM</div>
+          <div>
+            <div class="s7-name">Abeer Makki</div>
+            <div class="s7-role">Agentic AI Governance Framework · 2025</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end track -->
+  </div><!-- end track-outer -->
+
+  <!-- Navigation -->
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn" onclick="move(-1)" disabled>← Previous</button>
+    <div class="slide-info" id="slideInfo">1 / 7</div>
+    <button class="nav-btn primary" id="nextBtn" onclick="move(1)">Next →</button>
+  </div>
+
+</div><!-- end carousel-wrap -->
+
+<div class="email-note">
+  <strong>Embed in email:</strong> Host this HTML file and link to it, or screenshot each slide for an image carousel. For Outlook / Gmail: use the screenshots as inline images with a "View full presentation →" link to the hosted version. All 7 slides are self-contained in this single HTML file.
+</div>
+
+<script>
+let current = 0;
+const total = 7;
+const track = document.getElementById('track');
+const dotsEl = document.getElementById('dots');
+const slideInfo = document.getElementById('slideInfo');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+// Build dots
+for(let i=0;i<total;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+}
+
+function goTo(n){
+  current=Math.max(0,Math.min(total-1,n));
+  track.style.transform=`translateX(-${current*100}%)`;
+  // update dots
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.className='dot'+(i===current?' active':'');
+  });
+  // update info
+  slideInfo.textContent=`${current+1} / ${total}`;
+  prevBtn.disabled=current===0;
+  nextBtn.disabled=current===total-1;
+  nextBtn.textContent=current===total-1?'Done ✓':'Next →';
+  // trigger animations
+  const slides=document.querySelectorAll('.slide');
+  slides.forEach(s=>s.classList.remove('slide-entering'));
+  void slides[current].offsetWidth;
+  slides[current].classList.add('slide-entering');
+}
+
+function move(dir){ goTo(current+dir); }
+
+// keyboard navigation
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') move(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') move(-1);
+});
+
+// touch swipe
+let touchStartX=0;
+track.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
+track.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-touchStartX;
+  if(Math.abs(dx)>50) move(dx<0?1:-1);
+},{passive:true});
+
+// init first slide animation
+goTo(0);
+</script>
+</body>
+</html>
